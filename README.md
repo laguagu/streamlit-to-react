@@ -78,6 +78,18 @@ React Frontend → HTTP → FastAPI Backend → OpenAI
 
 ## Converting Streamlit to React
 
+### 0. Initialize React Project with Vite
+
+Start by creating a new Vite project:
+
+```bash
+npm create vite@latest frontend -- --template react-ts
+cd frontend
+npm install
+```
+
+For more configuration options and details, see [Vite documentation](https://vite.dev/guide/).
+
 ### 1. Identify Components
 
 | Streamlit        | React                     |
