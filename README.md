@@ -119,79 +119,21 @@ const handleSubmit = async () => {
 };
 ```
 
-## OpenShift Deployment
+## Deployment
 
-### Internal Service Communication (Secure)
+### Deployment Architecture
 
-Backend doesn't need public access - frontend calls it internally:
+- **Backend:** Internal service (no public route needed)
+- **Frontend:** Public route with proxy to backend
+- **Communication:** Frontend proxies API calls to backend internally
+- **Security:** API keys stored in secrets/environment variables
 
-**Backend:** Deploy as Service (no Route)
+### Key Considerations
 
-```bash
-oc new-app backend:latest
-oc expose deployment/backend --port=8000
-# No "oc expose svc/backend" = internal only
-```
-
-**Frontend:** Deploy with Route, proxy to backend
-
-```nginx
-# In frontend nginx config
-location /api {
-    proxy_pass http://backend-service:8000;
-}
-```
-
-**Frontend Route:**
-
-```bash
-oc new-app frontend:latest
-oc expose svc/frontend
-```
-
-### Environment Variables
-
-```bash
-# Create secret for backend
-oc create secret generic backend-secrets \
-  --from-literal=OPENAI_API_KEY=sk-xxx
-
-# Add to deployment
-oc set env deployment/backend \
-  --from=secret/backend-secrets
-```
-
-### Key Points
-
-- Services communicate via DNS: `http://backend-service:8000`
-- Only frontend needs public Route
-- Backend stays internal = more secure
-- Use OpenShift Secrets for API keys
-
-## Using AI to Help Convert
-
-### Complete Conversion Prompt
-
-```
-I have a Streamlit app I want to convert to React 19 + FastAPI:
-
-[PASTE YOUR CODE]
-
-Create:
-1. FastAPI backend using OpenAI's .parse() method with Pydantic models
-2. React 19 + TypeScript frontend with useState hooks
-3. API service layer in src/services/api.ts
-4. Include error handling and loading states
-
-Keep it simple and well-commented.
-```
-
-### Step-by-Step Approach
-
-1. **Analyze:** "List all Streamlit components in this app and their React equivalents"
-2. **Backend:** "Create FastAPI endpoint for this Streamlit function"
-3. **Frontend:** "Create React component for this Streamlit UI"
-4. **Styling:** "Add modern CSS for this component"
+- Backend service accessible only within cluster
+- Frontend handles all external traffic and proxies to backend
+- Use secrets management for sensitive credentials
+- Configure CORS appropriately for your setup
 
 ## React Quick Reference
 
@@ -241,10 +183,3 @@ react-version/
     ├── package.json
     └── vite.config.ts
 ```
-
-## Troubleshooting
-
-**CORS errors:** Check backend CORS config and Vite proxy
-**API fails:** Verify backend is running on port 8000
-**Build errors:** `rm -rf node_modules && npm install`
-**Types errors:** Check TypeScript interfaces match API responses
