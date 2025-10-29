@@ -90,6 +90,21 @@ npm install
 
 For more configuration options and details, see [Vite documentation](https://vite.dev/guide/).
 
+**AI Agent Prompt:**
+
+After initializing the Vite project, you can use a prompt like this:
+
+```
+Convert this Streamlit app to React + FastAPI:
+
+[PASTE YOUR STREAMLIT CODE]
+
+Create:
+1. FastAPI backend with Pydantic models
+2. React TypeScript frontend
+3. Include error handling and loading states
+```
+
 ### 1. Identify Components
 
 | Streamlit        | React                     |
