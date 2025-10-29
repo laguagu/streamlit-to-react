@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /B)",
+      "Bash(powershell -Command:*)",
+      "Bash(move app.py streamlit-version )",
+      "Bash(move:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
