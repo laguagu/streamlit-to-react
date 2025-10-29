@@ -5,6 +5,7 @@ Demo showing how to convert a Streamlit app to React 19 + FastAPI.
 ## What's This?
 
 A simple AI event extractor app in two versions:
+
 - **Streamlit** (original) - Single Python file
 - **React + FastAPI** - Separated frontend/backend
 
@@ -26,6 +27,7 @@ Open: `http://localhost:8501`
 ### React Version
 
 **Backend:**
+
 ```bash
 cd react-version/backend
 pip install -r requirements.txt
@@ -35,6 +37,7 @@ uvicorn main:app --reload
 ```
 
 **Frontend (new terminal):**
+
 ```bash
 cd react-version/frontend
 npm install
@@ -46,12 +49,14 @@ Open: `http://localhost:3000`
 ## Key Differences
 
 ### Streamlit
+
 - Everything in one `app.py` file
 - State managed automatically
 - Quick prototyping
 - Python only
 
 ### React + FastAPI
+
 - Frontend (React) and backend (FastAPI) separated
 - Manual state management with `useState`
 - More control over UI/UX
@@ -60,11 +65,13 @@ Open: `http://localhost:3000`
 ## Architecture
 
 **Streamlit:**
+
 ```
 app.py → UI + Logic + API calls
 ```
 
 **React + FastAPI:**
+
 ```
 React Frontend → HTTP → FastAPI Backend → OpenAI
 ```
@@ -73,12 +80,12 @@ React Frontend → HTTP → FastAPI Backend → OpenAI
 
 ### 1. Identify Components
 
-| Streamlit | React |
-|-----------|-------|
+| Streamlit        | React                     |
+| ---------------- | ------------------------- |
 | `st.text_area()` | `<textarea>` + `useState` |
-| `st.button()` | `<button onClick={...}>` |
-| `st.spinner()` | Loading state |
-| `st.json()` | Custom display |
+| `st.button()`    | `<button onClick={...}>`  |
+| `st.spinner()`   | Loading state             |
+| `st.json()`      | Custom display            |
 
 ### 2. Create Backend API
 
@@ -100,16 +107,16 @@ def extract_event(request: EventRequest):
 ### 3. Create React Component
 
 ```tsx
-const [text, setText] = useState("")
-const [result, setResult] = useState(null)
+const [text, setText] = useState("");
+const [result, setResult] = useState(null);
 
 const handleSubmit = async () => {
-  const data = await fetch('/api/extract-event', {
-    method: 'POST',
-    body: JSON.stringify({ text })
-  })
-  setResult(await data.json())
-}
+  const data = await fetch("/api/extract-event", {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+  setResult(await data.json());
+};
 ```
 
 ## OpenShift Deployment
@@ -119,6 +126,7 @@ const handleSubmit = async () => {
 Backend doesn't need public access - frontend calls it internally:
 
 **Backend:** Deploy as Service (no Route)
+
 ```bash
 oc new-app backend:latest
 oc expose deployment/backend --port=8000
@@ -126,6 +134,7 @@ oc expose deployment/backend --port=8000
 ```
 
 **Frontend:** Deploy with Route, proxy to backend
+
 ```nginx
 # In frontend nginx config
 location /api {
@@ -134,6 +143,7 @@ location /api {
 ```
 
 **Frontend Route:**
+
 ```bash
 oc new-app frontend:latest
 oc expose svc/frontend
@@ -152,6 +162,7 @@ oc set env deployment/backend \
 ```
 
 ### Key Points
+
 - Services communicate via DNS: `http://backend-service:8000`
 - Only frontend needs public Route
 - Backend stays internal = more secure
