@@ -112,7 +112,7 @@ const handleSubmit = async () => {
 }
 ```
 
-## CSC Rahti / OpenShift Deployment
+## OpenShift Deployment
 
 ### Internal Service Communication (Secure)
 
