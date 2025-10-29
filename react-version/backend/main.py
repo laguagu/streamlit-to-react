@@ -14,18 +14,23 @@ For CSC Rahti 2 deployment:
 - Only the frontend needs to be exposed via a Route
 """
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from openai import OpenAI
 import os
 from typing import List
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from openai import OpenAI
+from pydantic import BaseModel
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize FastAPI app
 app = FastAPI(
     title="Event Extractor API",
     description="Extract structured event information from natural language text",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # CORS configuration
@@ -39,26 +44,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize OpenAI client
-# The API key is read from the OPENAI_API_KEY environment variable
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# OpenAI client will be initialized lazily when needed
+# This prevents startup errors if API key is not set
+def get_openai_client():
+    """Get or create OpenAI client instance"""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="OpenAI API key not configured. Set OPENAI_API_KEY environment variable.",
+        )
+    return OpenAI(api_key=api_key)
 
 
 # Pydantic models for request and response validation
 class EventRequest(BaseModel):
     """Request model for event extraction"""
+
     text: str
 
     class Config:
         json_schema_extra = {
-            "example": {
-                "text": "Alice and Bob are going to a science fair on Friday."
-            }
+            "example": {"text": "Alice and Bob are going to a science fair on Friday."}
         }
 
 
 class CalendarEvent(BaseModel):
     """Response model for extracted event information"""
+
     name: str
     date: str
     participants: List[str]
@@ -66,12 +80,14 @@ class CalendarEvent(BaseModel):
 
 class EventResponse(BaseModel):
     """Wrapper for successful event extraction"""
+
     success: bool = True
     event: CalendarEvent
 
 
 class ErrorResponse(BaseModel):
     """Error response model"""
+
     success: bool = False
     error: str
 
@@ -85,9 +101,7 @@ def read_root():
     return {
         "message": "Event Extractor API",
         "version": "1.0.0",
-        "endpoints": {
-            "POST /api/extract-event": "Extract event information from text"
-        }
+        "endpoints": {"POST /api/extract-event": "Extract event information from text"},
     }
 
 
@@ -105,21 +119,17 @@ def extract_event(request: EventRequest):
     Raises:
         HTTPException: If OpenAI API call fails or API key is missing
     """
-    # Check if OpenAI API key is configured
-    if not os.getenv("OPENAI_API_KEY"):
-        raise HTTPException(
-            status_code=500,
-            detail="OpenAI API key not configured. Set OPENAI_API_KEY environment variable."
-        )
-
     try:
+        # Get OpenAI client (this will check for API key)
+        client = get_openai_client()
+
         # Call OpenAI API with structured output using .parse()
         # This is simpler than using response_format with json_schema
         response = client.responses.parse(
             model="gpt-4o-2024-08-06",
             input=[
                 {"role": "system", "content": "Extract the event information."},
-                {"role": "user", "content": request.text}
+                {"role": "user", "content": request.text},
             ],
             text_format=CalendarEvent,
         )
@@ -128,10 +138,7 @@ def extract_event(request: EventRequest):
         event = response.output_parsed
 
         # Return structured response
-        return EventResponse(
-            success=True,
-            event=event
-        )
+        return EventResponse(success=True, event=event)
 
     except Exception as e:
         # Log the error (in production, use proper logging)
@@ -139,8 +146,7 @@ def extract_event(request: EventRequest):
 
         # Return error response
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to extract event information: {str(e)}"
+            status_code=500, detail=f"Failed to extract event information: {str(e)}"
         )
 
 
@@ -149,4 +155,5 @@ def extract_event(request: EventRequest):
 # For production: uvicorn main:app --host 0.0.0.0 --port 8000
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
